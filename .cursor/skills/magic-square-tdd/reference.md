@@ -9,5 +9,6 @@
 | D-005 | entity | 격자 크기·값 범위 위반 → `False` | F3 |
 | D-006 | control | entity `validate` 오케스트레이션 | FR-1 |
 | D-007 | entity | MagicConstant SSOT — 리터럴 34/16 미사용 | `.cursorrules` |
+| D-LOC-01 | entity | `find_blank_coords` — G1 빈칸 좌표 row-major 1-index | FR-LOC-01 · **GREEN PASS** |
 
 > U-* ID는 boundary Track 착수 시 `test_u_*.py`와 함께 추가한다.

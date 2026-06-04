@@ -1,0 +1,8 @@
+{
+  "test_id": "D-LOC-01",
+  "phase": "GREEN_PASS",
+  "fixture": "grid_g1",
+  "function": "find_blank_coords",
+  "expected_blank_coords_1_index": [[2, 2], [3, 3]],
+  "ordering": "row-major"
+}
