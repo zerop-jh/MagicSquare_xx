@@ -1,0 +1,52 @@
+# MagicSquare_1004 — Cursor Rules (초안)
+
+## 도메인
+
+- 4×4 **부분 마방진**: 셀 값 `0`(빈칸) 또는 `1~16`, 빈칸(`0`)은 **정확히 2개**.
+- **마방합(MagicConstant) = 34** — 10선(행 4 + 열 4 + 대각선 2) 각각 합 34.
+- **출력**: `int[6]` → `[r1, c1, n1, r2, c2, n2]` — 빈칸 2곳의 **1-index** 좌표와 채울 값.
+- **오류 코드**
+  - `E001`~`E007`: boundary 계층에서 정의·발생·변환.
+  - **entity는 `E001`~`E005` 처리 금지** — entity는 도메인 불변식·판정만 담당.
+
+## 아키텍처 (ECB)
+
+- 의존 방향: **boundary → control → entity** (단방향).
+- **entity → \* import 금지** — entity는 외부 계층·I/O·오류 코드에 의존하지 않는다.
+- boundary: 입력 파싱, 출력 직렬화, `E001`~`E007` 매핑.
+- control: 유스케이스 오케스트레이션, entity 호출, 결과 조립.
+- entity: 격자·마방합·빈칸 규칙 등 순수 도메인 로직.
+
+## Dual-Track TDD
+
+| Track | 대상 | Mock |
+|-------|------|------|
+| **Logic** | entity, control | **Domain Mock 금지** — 실제 도메인 객체·함수 사용 |
+| **UI** | boundary | Mock **허용** — I/O·외부 의존 대역 가능 |
+
+- **테스트 ID**
+  - `D-*` — Logic Track (Domain)
+  - `U-*` — UI Track (Boundary)
+- **파일명**: `test_d_*.py` (Logic), `test_u_*.py` (UI)
+- 디렉터리: `tests/entity/`, `tests/control/` (Logic), `tests/boundary/` (UI)
+
+## TDD 규칙
+
+- 사이클: **RED → GREEN → REFACTOR** — 순서 준수.
+- **assert 완화·`skip`·`xfail` 금지** — 실패를 숨기지 않는다.
+- 테스트 하나 = 행동 하나, 이름은 `D-*` / `U-*` ID와 대응.
+- **MagicConstant SSOT**: `34`, `16`, 격자 크기 등 마방진 상수는 **단일 모듈**에서만 정의. 리터럴 산재 금지.
+
+## AI 행동
+
+- **응답 언어: 한국어** (사용자가 영어를 명시 요청한 경우만 예외).
+- TDD 작업 시 매 턴 **Phase / Layer / Track** 선언  
+  예: `Phase: RED | Layer: entity | Track: Logic (D-001)`
+- 구현 전 기존 코드·테스트·ECB 경계 확인; 범위 밖 기능(Solver UI 등) 임의 추가 금지.
+- **git commit은 사용자 요청 시에만** — 자동 커밋·푸시하지 않는다.
+- Harness 골격 외 **요청되지 않은 파일·문서 생성 금지**.
+
+## 참고
+
+- `Report/01`, `Report/02` — 문제 정의·스펙 SSOT.
+- `docs/PRD.md` — 기능 범위·AC 참조.
