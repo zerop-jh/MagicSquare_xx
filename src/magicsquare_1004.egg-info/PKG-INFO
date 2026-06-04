@@ -1,7 +1,0 @@
-Metadata-Version: 2.4
-Name: magicsquare-1004
-Version: 0.1.0
-Summary: MagicSquare_1004 — ECB + Dual-Track TDD harness
-Requires-Python: >=3.10
-Provides-Extra: dev
-Requires-Dist: pytest>=8.0; extra == "dev"
