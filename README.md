@@ -11,7 +11,7 @@
 | 도메인 | 4×4 격자, 빈칸 2개(`0`), 값 `1~16`, **마법합 34** |
 | 검증 대상 | **10선** — 행 4 + 열 4 + 대각선 2 |
 | 페르소나 | 4×4 부분 마방진을 손으로/코드로 다루는 **학습자** |
-| 현재 단계 | STEP 1 (Mom Test) 완료 · **세션 3** (Rule + Command + Test Loop) 진행 예정 |
+| 현재 단계 | STEP 1~3 완료 · **RED 단계** (Dual-Track TDD) 진행 중 |
 
 ### 진짜 문제 (Mom Test)
 
@@ -78,17 +78,78 @@
 ```
 MagicSquare_xx/
 ├── README.md
+├── .cursorrules
+├── pyproject.toml
 ├── docs/
-│   └── PRD.md                          # 제품 요구사항 (v0.1)
-├── Report/
-│   ├── 01.REPORT.md                    # STEP 1 Mom Test 인터뷰 보고서
-│   └── 01.MagicSquare_ProblemDefinition_Report.md  # 문제 정의 통합 보고서
-└── Prompting/
-    ├── 01.mom_test_interview.md        # Mom Test 인터뷰 트랜스크립트
-    └── 01.cursor_mom_test_workbook_discussion.md   # Cursor 대화 Export
+│   ├── PRD.md                          # 제품 요구사항 (v0.1)
+│   └── TODO.md                         # Dual-Track TDD To Do (상세)
+├── src/
+│   ├── entity/                         # Logic Track
+│   ├── control/
+│   └── boundary/                       # UI Track
+├── tests/
+│   ├── entity/                         # test_d_*.py
+│   ├── control/
+│   └── boundary/                       # test_u_*.py
+├── Report/                             # STEP 1~3 보고서
+└── .cursor/skills/magic-square-tdd/    # TDD Skill, D-* reference
 ```
 
-> `src/`, `tests/` — 세션 3 구현 시 추가 예정 (`src/validator.py`, `tests/test_validator.py`)
+---
+
+## RED 단계 체크리스트
+
+> 상세: [docs/TODO.md](docs/TODO.md) · Command: `/tdd-red` · **Logic(B) 먼저** → Boundary(A)는 Logic GREEN 완료 후
+
+### 진행 순서
+
+```
+Track B (Logic)     D-001 → D-007   RED (tests/ only, pytest FAIL)
+       ↓ Logic GREEN 완료 후
+Track A (Boundary)  U-IN → U-OUT → U-FLOW   RED
+```
+
+### Track B — Logic RED (`D-*`)
+
+**규칙:** `tests/`만 변경 · `src/` 수정 금지 · Domain Mock 금지 · RED 성공 = pytest **FAIL**
+
+#### entity
+
+- [ ] **D-001** — `sum_line` 한 줄 합 (FR-2) · `tests/entity/test_d_sum_line.py`
+  - Given: 행1 `[16, 3, 2, 13]` → Then: `sum_line(cells) == 34` → Expected RED: `ImportError`
+- [ ] **D-002** — 합≠34 → `False` (AC-1) · `tests/entity/test_d_validate.py`
+  - Given: G_bad → Then: `validate(grid) == False` → Expected RED: `ImportError` / `AssertionError`
+- [ ] **D-003** — 완성 마방진 → `True` (AC-2)
+  - Given: G_complete → Then: `validate(grid) == True` → Expected RED: `ImportError` / `AssertionError`
+- [ ] **D-004** — 빈칸 2개 부분 격자 (AC-3)
+  - Given: G_partial → Then: 정책에 따른 `validate` 결과 → Expected RED: `ImportError` / `AssertionError`
+- [ ] **D-005** — 크기·값 범위 위반 → `False` (F3)
+  - Given: 3×4 또는 범위 위반 → Then: `validate(grid) == False` → Expected RED: `ImportError` / `AssertionError`
+- [ ] **D-007** — MagicConstant SSOT
+  - Given: SSOT 모듈 → Then: `34`, `16` 리터럴 없이 참조 → Expected RED: `ImportError` / `AssertionError`
+  - 파일: `tests/entity/test_d_magic_constant.py`
+
+#### control
+
+- [ ] **D-006** — `validate` 오케스트레이션 (FR-1) · `tests/control/test_d_validate.py`
+  - Given: G_complete → Then: control 경유 `validate` → `True` → Expected RED: `ImportError` / `AssertionError`
+
+### Track A — Boundary RED (`U-*`)
+
+> **선행:** Track B Logic GREEN 완료 · I/O·control Mock 허용
+
+#### 입력 (U-IN)
+
+- [ ] **U-IN-01** — `grid=None` → `E003 INVALID_NULL` → Expected RED: `ModuleNotFoundError`
+- [ ] **U-IN-02** — `grid=3×4` → `E001 INVALID_SIZE` → Expected RED: `AssertionError`
+- [ ] **U-IN-03** — 빈칸 0개 → `E002 INVALID_BLANK` → Expected RED: `AssertionError`
+
+#### 출력·흐름 (U-OUT / U-FLOW)
+
+- [ ] **U-OUT-01** — 유효 입력 G1 → `len(result) == 6` (`int[6]`, 1-index) → Expected RED: `pytest.fail()`
+- [ ] **U-FLOW-02** — `grid=None` → `execute()` 0회 호출 → Expected RED: `pytest.fail()`
+
+파일: `tests/boundary/test_u_*.py`
 
 ---
 
@@ -97,8 +158,11 @@ MagicSquare_xx/
 | 단계 | 내용 | 상태 |
 |------|------|------|
 | STEP 1 | Mom Test 인터뷰 · 문제 정의 | ✅ 완료 |
-| 세션 3 | `validate` + Test Loop (TDD) | 🔲 진행 예정 |
-| 이후 | MissingFinder, Solver, ECB Boundary | Out of scope |
+| STEP 2 | Harness · ECB · `.cursorrules` | ✅ 완료 |
+| STEP 3 | Skill · Command (`/tdd-red`, `/review-ecb`) | ✅ 완료 |
+| **RED** | Logic `D-*` → Boundary `U-*` 실패 테스트 | 🔲 진행 중 |
+| GREEN / REFACTOR | 최소 구현 · 리팩터 | 🔲 대기 |
+| 이후 | MissingFinder, Solver, GridUI | Out of scope |
 
 ---
 
@@ -113,16 +177,15 @@ MagicSquare_xx/
 
 ---
 
-## 실행 방법 (구현 후)
+## 실행 방법
 
 ```bat
-python -m venv .venv
-.venv\Scripts\activate
-pip install pytest
-python -m pytest
+cd c:\DEV\MagicSquare_xx
+python -m pip install -e ".[dev]"
+python -m pytest tests/entity/test_d_sum_line.py -k "D-001" -v
 ```
 
-구현 전에는 테스트·소스 코드가 없습니다. 세션 3에서 RED 테스트부터 작성합니다.
+RED 단계에서는 대상 테스트가 **FAIL**이어야 합니다 (`ImportError` · `AssertionError` · `FAILED`).
 
 ---
 
@@ -130,10 +193,11 @@ python -m pytest
 
 | 문서 | 설명 |
 |------|------|
+| [docs/TODO.md](docs/TODO.md) | Dual-Track TDD To Do · RED/GREEN 마일스톤 |
 | [docs/PRD.md](docs/PRD.md) | 기능 요구사항, FR/AC, Test Loop |
-| [Report/01.MagicSquare_ProblemDefinition_Report.md](Report/01.MagicSquare_ProblemDefinition_Report.md) | Mom Test + 문제 정의 + 세션 3 범위 |
-| [Report/01.REPORT.md](Report/01.REPORT.md) | STEP 1 인터뷰 원본 보고서 |
-| [Prompting/01.mom_test_interview.md](Prompting/01.mom_test_interview.md) | 인터뷰 트랜스크립트 |
+| [Report/01.MagicSquare_ProblemDefinition_Report.md](Report/01.MagicSquare_ProblemDefinition_Report.md) | Mom Test + 문제 정의 |
+| [Report/02.MagicSquare_Harness_Setup_Report.md](Report/02.MagicSquare_Harness_Setup_Report.md) | Harness · ECB · Dual-Track |
+| [Report/03.MagicSquare_Skill_Command_Report.md](Report/03.MagicSquare_Skill_Command_Report.md) | Skill · `/tdd-red` · D-* ID |
 
 ---
 
